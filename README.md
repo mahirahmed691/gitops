@@ -21,5 +21,5 @@ To run this app locally, follow these steps:
 
 ```bash
 git clone https://github.com/mahirahmed691/gitops.git
-cd app-repo
+cd gitops
 
