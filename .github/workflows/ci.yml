@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout app repository
         uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
@@ -27,14 +27,23 @@ jobs:
           docker build -t mahirahmed93/gitops:${{ github.sha }} .
           docker push mahirahmed93/gitops:${{ github.sha }}
 
+      - name: Clone Kubernetes manifest repository
+        run: |
+          git clone https://github.com/your-org/k8s-manifest-repo.git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use a token for private repos if needed
+
       - name: Update Kubernetes manifests with new image tag
         run: |
           sed -i "s|image: mahirahmed93/gitops:.*|image: mahirahmed93/gitops:${{ github.sha }}|" k8s-manifest/deployment.yaml
 
       - name: Commit and push updated Kubernetes manifests
-        uses: EndBug/add-and-commit@v7
-        with:
-          author_name: 'GitHub Actions'
-          author_email: 'actions@github.com'
-          message: 'Update Kubernetes deployment with new image tag'
-          add: 'k8s/deployment.yaml'
+        working-directory: k8s-manifest-repo
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add deployment.yaml
+          git commit -m "Update Kubernetes deployment with new image tag"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auth to push changes back
